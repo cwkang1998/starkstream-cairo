@@ -179,7 +179,7 @@ func burn{
         range_check_ptr
     }(to: felt, amount: Uint256):
     Ownable.assert_only_owner()
-    ERC20._burn(account, amount)
+    ERC20._burn(to, amount)
     return ()
 end
 
