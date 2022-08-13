@@ -4,7 +4,20 @@ protostar_version = "0.3.0"
 ["protostar.project"]
 libs_path = "lib"
 
+
+["protostar.shared_command_configs"]
+cairo_path = [
+    "./lib/cairo_contracts/src"
+]
+
+
 ["protostar.contracts"]
 main = [
     "src/main.cairo",
+]
+ERC20MintableBurnable = [
+    "src/tokens/ERC20MintableBurnable.cairo",
+]
+m_ETH = [
+    "src/tokens/m_ETH.cairo",
 ]
