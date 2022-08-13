@@ -12,7 +12,7 @@ from starkware.cairo.common.uint256 import Uint256, uint256_check, uint256_eq, u
 from openzeppelin.token.erc20.library import ERC20
 from openzeppelin.security.safemath.library import SafeUint256
 from openzeppelin.utils.constants.library import UINT8_MAX
-
+from starkware.starknet.common.syscalls import get_block_timestamp
 # 
 # Contructor
 # 
@@ -179,6 +179,38 @@ func _approve{
     return ()
 end
 #####################################################################
+struct inflow:
+    member Index: felt
+    member amount_per_unit: felt
+    member createdTimestamp: felt
+end
+
+struct outflow:
+    member Index: felt
+    member amount_per_unit: felt
+    member createdTimestamp: felt
+end
+# stream_in_length_by_address: account->total len of inflow array
+@storage_var
+func stream_in_len_by_addr(account:felt) -> (res: felt):
+end
+
+# stream_in_info_by_address: (account:felt)-> (array_of_struct: inflow*)
+@storage_var
+func stream_in_info_by_addr(account:felt) -> (res : inflow*):
+end
+
+
+@storage_var
+func stream_out_len_by_addr(account:felt) -> (res : felt):
+end
+
+@storage_var
+func stream_out_info_by_addr(account:felt) -> (res : outflow*):
+end
+
+
+
 # Get current net balance
 func getBalance
         syscall_ptr : felt*,
@@ -191,39 +223,35 @@ let (static_balance: Uint256)= balance_of(account)
 # dynamic balance
 
 # inflow
-for index=range(streams_in_length_by_address_to_len(account)) #return len of total in stream
-    
-    # stream amount*(timestamp now - createdtimestamp)/86400  (per day)
-    stream_amount = stream_in_info_by_address(account)[index].amount_per_day
-    timepassed_in_day = (timestampnow-stream_in_info_by_address(account)[index].createdTimestamp)/86400
-    if is_stop != FALSE:
-        inflow+= stream_amount*timepassed_in_day
+let (len_in:felt)= stream_in_len_by_addr.read(account)
+
+let (inflow_sum: felt) = getInflowSum(len_in,stream_in_info_by_addr.read(account))
+
+
 
 # outflow
-for index=range(streams_out_length_by_address_to_len(account)) #return len of total in stream
-    
-    # stream amount*(timestamp now - createdtimestamp)/86400  (per day)
-    stream_amount = stream_out_info_by_address(account)[index].amount_per_day
-    timepassed_in_day = (timestampnow-stream_out_info_by_address(account)[index].createdTimestamp)/86400
-    if is_stop != FALSE:
-        outflow+= stream_amount*timepassed_in_day
-
-return totalBalance = static_balance + inflow - outflow
+let (len_out:felt)= stream_out_len_by_addr.read(account_
+let (outflow_sum:felt_ = getOutflowSum(len_out, stream_out_info_by_addr.read(account))
 
 
-struct inflow/outflow{
-    index: Uint256,
-    amount_per_day: uint256,
-    createdTimestamp: block.timestamp,
-    is_stop: bool
-}
-# mapping
-# in flow
-# stream_in_length_by_address: account->total len of inflow array
-# stream_in_info_by_address: (account:felt)-> (array_of_struct: inflow*)
-# outflow
-# stream_out_length_by_address: account->total  len of outflow array
-# stream_out_info_by_address: (account:felt)->(array_of_struct: outflow*)
+return totalBalance = static_balance + inflow_sum - outflow_sum
+
+# TODO: modify logic
+func getInflowSum(n:felt,arr: inflow*)->(res: felt):
+    if n==1:
+        let (block_timestamp_ = get_block_timestamp()
+        let result= (arr[n-1].amount_per_unit*block_timestamp)/(arr[n-1].createdTimestamp)
+        return result
+    return getInflowSum(n-1,arr[n])
+
+# TODO: modify logic
+func getOutflowSum(n:felt,arr: outflow*)->(res: felt):
+    if n==1:
+        let (block_timestamp_ = get_block_timestamp()
+        let result= (arr[n-1].amount_per_unit*block_timestamp)/(arr[n-1].createdTimestamp)
+        return result
+    return getOutflowSum(n-1,arr[n])
+
 
 
 ######################################################################
@@ -231,19 +259,20 @@ struct inflow/outflow{
 # update sender's outflow and receiver's inflow
 func Stream_created(sender,receiver,amount,createdTimestamp)->:
     # get and update receiver inflow info 
-    stream_in_length_by_address: receiver->total len of inflow array
-    len_in= (stream_in_length_by_address)
-    stream_in_info_by_address(receiver).push(
-        inflow(index= len_in,amount_per_day=amount,createdTimestamp=createdTimestamp, is_stop=FALSE)
-    )
-    stream_in_length_by_address(receiver)+=1
-    # get and update sender outlow info 
-    len_out=stream_out_length_by_address(account)
-    stream_out_info_by_address(sender).push(
-        outflow(index=len_out,amount_per_day=amount,createdTimestamp=createdTimestamp,is_stop=FALSE)
+    let (len_in:felt) = stream_in_len_by_addr.read(receiver)
 
-    )
-    stream_out_length_by_address(sender)+=1
+    assert stream_in_info_by_address.read(receiver)[len_in]= 
+    inflow(index= len_in,amount_per_unit= amount,createdTimestamp=c reatedTimestamp)
+    
+    assert stream_in_len_by_addr.read(receiver) = len_in+1
+
+    # get and update sender outlow info 
+    let len_out=stream_out_len_by_addr(sender)
+    assert stream_out_info_by_addr.read(sender)[len_out]= 
+        outflow(index=len_out,amount_per_unit= amount,createdTimestamp=createdTimestamp)
+
+    assert stream_out_len_by_addr.read(sender) = len_out+1
+
     return true
 #####################################################################
 # called by core contract when a new stream is stopped 
@@ -251,22 +280,21 @@ func Stream_created(sender,receiver,amount,createdTimestamp)->:
 func Stream_stopped(sender,receiver,amount,createdTimestamp)->bool:
     # get and update receiver inflow info 
     stream_in_length_by_address: receiver->total len of inflow array
-    len_in= (stream_in_length_by_address)
+    let (len_in:felt)= stream_in_len_by_addr.read(receiver)
+    # TODO: change the for loop
     for index = range(len_in):
         # a dumb way
-        if(stream_in_info_by_address(receiver)[index].amount_per_day == amount
-        && stream_in_info_by_address(receiver)[index].createdTimestamp == createdTimestamp
-        && stream_in_info_by_address(receiver)[index].is_stop == FALSE):
-        let stream_in_info_by_address(receiver)[index].is_stop == TRUE
+        if(stream_in_info_by_addr(receiver)[index].amount_per_unit == amount
+        && stream_in_info_by_addr(receiver)[index].createdTimestamp == createdTimestamp)
+        let stream_in_info_by_addr(receiver)[index].amount_per_unit = 0
 
     # get and update sender outlow info 
-    len_out=stream_out_length_by_address(account)
+    let (len_out:felt)=stream_out_len_by_addr.read(sender)
     for index = range(len_out):
         # a dumb way
-        if(stream_out_info_by_address(sender)[index].amount_per_day == amount
-        && stream_out_info_by_address(sender)[index].createdTimestamp == createdTimestamp
-        && stream_out_info_by_address(sender)[index].is_stop == FALSE):
-        let stream_out_info_by_address(sender)[index].is_stop == TRUE
+        if(stream_out_info_by_address(sender)[index].amount_per_unit == amount
+        && stream_out_info_by_address(sender)[index].createdTimestamp == createdTimestamp)
+        let stream_out_info_by_address(sender)[index].amount_per_unit== 0
 ####################################################################################
 
 TODO: consider negative part
