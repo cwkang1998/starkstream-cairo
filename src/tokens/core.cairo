@@ -21,6 +21,67 @@ end
 func Burn(token_addr : felt, value : Uint256):
 end
 
+#
+# storage
+#
+@storage_var
+func token_registrar() -> (res: felt):
+end
+
+# @constructor
+# func constructor{
+#     syscall_ptr : felt*,
+#     pedersen_ptr : HashBuiltin*,
+#     range_check_ptr,
+# }(token_registrar_: felt, erc20_addr_: felt, admin: felt):
+
+#     Ownable.initializer(admin)
+#     token_registrar.write(token_registrar_)
+
+#     return ()
+# end
+
+# init stuff
+@view
+func get_admin{
+    syscall_ptr : felt*,
+    pedersen_ptr : HashBuiltin*,
+    range_check_ptr,
+}() -> (admin: felt):
+    let (res) = Ownable.owner()
+    return (admin=res)
+end
+
+# @view
+# func get_token_registrar{
+#     syscall_ptr : felt*,
+#     pedersen_ptr : HashBuiltin*,
+#     range_check_ptr,
+# }() -> (res: felt):
+#     let (res) = token_registrar.read()
+#     return (res=res)
+# end
+
+
+#
+# asserts
+#
+# func assert_token_is_registered{
+#     syscall_ptr : felt*,
+#     pedersen_ptr : HashBuiltin*,
+#     range_check_ptr,
+# }(token_address: felt):
+#     let (token_registrar_addr) = token_registrar.read()
+
+#     let (is_registered) = IUserRegistrar.check_user_registered(contract_address=token_registrar_addr,
+#                                                                sender_address=user)
+#     with_attr error_message("User not registered"):
+#         assert is_registered = 1
+#     end
+
+#     return ()
+# end
+
 # check if user has sufficient tokens in wallet
 func assert_sufficient_tokens{
     syscall_ptr : felt*, 
