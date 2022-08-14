@@ -313,7 +313,8 @@ func Stream_stopped{
     #     if(stream_in_info_by_addr(receiver)[index].amount_per_unit == amount
     #     && stream_in_info_by_addr(receiver)[index].createdTimestamp == createdTimestamp)
     #     let stream_in_info_by_addr(receiver)[index].amount_per_unit = 0
-
+    let (inflow: inflow*) = stream_in_info_by_addr.read(receiver)
+    findInflowStream(len_in,inflow,amount,createdTimestamp)
     # get and update sender outlow info 
     let (len_out:felt)=stream_out_len_by_addr.read(sender)
     # for index = range(len_out):
@@ -321,7 +322,34 @@ func Stream_stopped{
     #     if(stream_out_info_by_address(sender)[index].amount_per_unit == amount
     #     && stream_out_info_by_address(sender)[index].createdTimestamp == createdTimestamp)
     #     let stream_out_info_by_address(sender)[index].amount_per_unit== 0
+    let (outflow: outflow*) = stream_out_info_by_addr.read(sender)
+    findOutflowStream(len_out,outflow,amount,createdTimestamp)
     return true
+end
+
+@external
+func findInflowStream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    len:Uint256,
+    arr: inflow*,
+    amount: Uint256,
+    createdTimestamp: felt
+):
+    if arr[len-1].amount_per_unit == amount && arr[len-1].createdTimestamp == createdTimestamp:
+        arr[len-1].amount_per_unit = 0
+    end
+    return findInflowStream(len-1,arr,amount,createdTimestamp)
+end
+@external
+func findOutflowStream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    len:Uint256,
+    arr: outflow*,
+    amount: Uint256,
+    createdTimestamp: felt
+):
+    if arr[len-1].amount_per_unit == amount && arr[len-1].createdTimestamp == createdTimestamp:
+        arr[len-1].amount_per_unit = 0
+    end
+    return findOutflowStream(len-1,arr,amount,createdTimestamp)
 end
 ####################################################################################
 
