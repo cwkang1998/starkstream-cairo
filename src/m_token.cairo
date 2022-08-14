@@ -1,26 +1,35 @@
-# SPDX-License-Identifier: MIT
-# OpenZeppelin Contracts for Cairo v0.3.1 (token/erc20/library.cairo)
-
 %lang starknet
 
-from starkware.starknet.common.syscalls import get_caller_address
+from starkware.starknet.common.syscalls import get_caller_address, get_contract_address
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.math import assert_not_zero, assert_lt
 from starkware.cairo.common.bool import FALSE
 from starkware.cairo.common.uint256 import Uint256, uint256_check, uint256_eq, uint256_not
 
 from openzeppelin.token.erc20.library import ERC20
+from openzeppelin.token.erc20.IERC20 import IERC20
+from openzeppelin.access.ownable.library import Ownable
 from openzeppelin.security.safemath.library import SafeUint256
 from openzeppelin.utils.constants.library import UINT8_MAX
 from starkware.starknet.common.syscalls import get_block_timestamp
+
+# 
+# Storage
+# 
+@storage_var
+func underlying_token_addr() -> (address : felt):
+end
+
 # 
 # Contructor
 # 
 @constructor
 func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr} (
-    name: felt, symbol: felt
+    name: felt, symbol: felt,  token_addr: felt
 ):
     ERC20.initializer(name, symbol, 18)
+    Ownable.initializer(owner)
+    underlying_token_addr.write(token_addr)
     return ()
 end
 
@@ -40,6 +49,29 @@ func symbol{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}()
     return (symbol)
 end
 
+@view
+func total_supply{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
+    totalSupply : Uint256
+):
+    let (totalSupply : Uint256) = ERC20.total_supply()
+    return (totalSupply)
+end
+
+@view
+func decimals{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
+    decimals : felt
+):
+    let (decimals) = ERC20.decimals()
+    return (decimals)
+end
+
+@view
+func balance_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    account : felt
+) -> (balance : Uint256):
+    let (balance : Uint256) = ERC20.balance_of(account)
+    return (balance)
+end
 
 @view
 func allowance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -50,135 +82,105 @@ func allowance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
 end
 
 
-func balance_of{
-        syscall_ptr : felt*,
-        pedersen_ptr : HashBuiltin*,
-        range_check_ptr
-    }(account: felt) -> (balance: Uint256):
-    let (balance: Uint256) = ERC20_balances.read(account)
-    return (balance)
+#
+# Externals
+#
+
+@external
+func transfer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    recipient : felt, amount : Uint256
+) -> (success : felt):
+    ERC20.transfer(recipient, amount)
+    return (1)
 end
 
-func transfer{
-        syscall_ptr : felt*,
-        pedersen_ptr : HashBuiltin*,
-        range_check_ptr
-    }(recipient: felt, amount: Uint256):
-    let (sender) = get_caller_address()
-    _transfer(sender, recipient, amount)
-    return ()
+@external
+func transfer_from{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    sender : felt, recipient : felt, amount : Uint256
+) -> (success : felt):
+    ERC20.transfer_from(sender, recipient, amount)
+    return (1)
 end
 
-func transfer_from{
-        syscall_ptr : felt*,
-        pedersen_ptr : HashBuiltin*,
-        range_check_ptr
-    }(
-        sender: felt,
-        recipient: felt,
-        amount: Uint256
-    ) -> ():
-    let (caller) = get_caller_address()
-    # subtract allowance
-    _spend_allowance(sender, caller,  amount)
-    # execute transfer
-    _transfer(sender, recipient, amount)
-    return ()
+@external
+func approve{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    spender : felt, amount : Uint256
+) -> (success : felt):
+    ERC20.approve(spender, amount)
+    return (1)
 end
 
-func approve{
-        syscall_ptr : felt*,
-        pedersen_ptr : HashBuiltin*,
-        range_check_ptr
-    }(spender: felt, amount: Uint256):
-    with_attr error_message("ERC20: amount is not a valid Uint256"):
-        uint256_check(amount)
-    end
-
-    let (caller) = get_caller_address()
-    _approve(caller, spender, amount)
-    return ()
+@external
+func increase_allowance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    spender : felt, added_value : Uint256
+) -> (success : felt):
+    ERC20.increase_allowance(spender, added_value)
+    return (1)
 end
+
+@external
+func decreaseAllowance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    spender : felt, subtracted_value : Uint256
+) -> (success : felt):
+    ERC20.decrease_allowance(spender, subtracted_value)
+    return (1)
+end
+
 
 
 # 
 # Wrapping related logics
 # 
-
-func deposit{
+@external
+func wrap{
         syscall_ptr : felt*,
         pedersen_ptr : HashBuiltin*,
         range_check_ptr
-    }
+    }(to: felt, amount: Uint256):
+        let (token_addr) = underlying_token_addr.read()
+        let (caller) = get_caller_address()
+        
+        let (transfer_res) = IERC20.transfer_from(
+            contract_address=token_addr,
+            sender=caller,
+            recipient=to,
+            amount=amount
+        )
+        with_attr error_message("Wrapping failed, cannot transfer ERC20 to contract."):
+            assert transfer_res = 1
+        end
+
+        ERC20._mint(to, amount)
+        return ()
 end
 
-
-func deposit{
+@external
+func unwrap{
         syscall_ptr : felt*,
         pedersen_ptr : HashBuiltin*,
         range_check_ptr
-    }
-end
-#
-# Internal
-#
+    }(amount: Uint256):
+        ERC20._burn(account, amount)
+        
+        let (token_addr) = underlying_token_addr.read()
+        let (m_token_contract) = get_contract_address()
+        let (caller) = get_caller_address()
+        
+        let (transfer_res) = IERC20.transfer_from(
+            contract_address=contract_address,
+            sender=m_token_contract,
+            recipient=caller,
+            amount=amount
+        )
+        with_attr error_message("Unwrapping failed."):
+            assert transfer_res = 1
+        end
 
-
-func _transfer{
-        syscall_ptr : felt*,
-        pedersen_ptr : HashBuiltin*,
-        range_check_ptr
-    }(sender: felt, recipient: felt, amount: Uint256):
-    with_attr error_message("ERC20: amount is not a valid Uint256"):
-        uint256_check(amount) # almost surely not needed, might remove after confirmation
-    end
-
-    with_attr error_message("ERC20: cannot transfer from the zero address"):
-        assert_not_zero(sender)
-    end
-
-    with_attr error_message("ERC20: cannot transfer to the zero address"):
-        assert_not_zero(recipient)
-    end
-
-    let (sender_balance: Uint256) = ERC20_balances.read(account=sender)
-    with_attr error_message("ERC20: transfer amount exceeds balance"):
-        let (new_sender_balance: Uint256) = SafeUint256.sub_le(sender_balance, amount)
-    end
-
-    ERC20_balances.write(sender, new_sender_balance)
-
-    # add to recipient
-    let (recipient_balance: Uint256) = ERC20_balances.read(account=recipient)
-    # overflow is not possible because sum is guaranteed by mint to be less than total supply
-    let (new_recipient_balance: Uint256) = SafeUint256.add(recipient_balance, amount)
-    ERC20_balances.write(recipient, new_recipient_balance)
-    Transfer.emit(sender, recipient, amount)
-    return ()
+        return ()
 end
 
-func _approve{
-        syscall_ptr : felt*,
-        pedersen_ptr : HashBuiltin*,
-        range_check_ptr
-    }(owner: felt, spender: felt, amount: Uint256):
-    with_attr error_message("ERC20: amount is not a valid Uint256"):
-        uint256_check(amount)
-    end
-
-    with_attr error_message("ERC20: cannot approve from the zero address"):
-        assert_not_zero(owner)
-    end
-
-    with_attr error_message("ERC20: cannot approve to the zero address"):
-        assert_not_zero(spender)
-    end
-
-    ERC20_allowances.write(owner, spender, amount)
-    Approval.emit(owner, spender, amount)
-    return ()
-end
 #####################################################################
+
 struct inflow:
     member Index: felt
     member amount_per_unit: felt
@@ -235,7 +237,8 @@ func getBalance{
     let (outflow_sum:Uint256) = getOutflowSum(len_out, stream_out_info_by_addr.read(account))
 
 
-    return totalBalance = static_balance + inflow_sum - outflow_sum
+    let (totalBalance) = static_balance + inflow_sum - outflow_sum
+    return (totalBalance)
 end
 
 # TODO: modify logic
@@ -246,9 +249,9 @@ func getInflowSum{
         range_check_ptr
     }(n:felt,arr: inflow*)->(res: Uint256):
     if n==1:
-        let (block_timestamp_ = get_block_timestamp()
+        let (block_timestamp) = get_block_timestamp()
         let result= (arr[n-1].amount_per_unit*(block_timestamp-arr[n-1].createdTimestamp))/86400
-        return result
+        return (result)
     end
     return getInflowSum(n-1,arr[n])
     
@@ -261,9 +264,9 @@ func getOutflowSum{
         range_check_ptr
     }(n:felt,arr: outflow*)->(res: Uint256):
     if n==1:
-        let (block_timestamp_ = get_block_timestamp()
+        let (block_timestamp) = get_block_timestamp()
         let result= (arr[n-1].amount_per_unit*(block_timestamp-arr[n-1].createdTimestamp))/86400
-        return result
+        return (result)
     end
     return getOutflowSum(n-1,arr[n])
 end
