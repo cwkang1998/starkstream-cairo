@@ -212,89 +212,117 @@ end
 
 
 # Get current net balance
-func getBalance
+@view
+func getBalance{
         syscall_ptr : felt*,
         pedersen_ptr : HashBuiltin*,
         range_check_ptr
-    }(account: felt):
-# static balance
-let (static_balance: Uint256)= balance_of(account)
+    }(account: felt)->(totalBalance:Uint256):
+    # static balance
+    let (static_balance: Uint256)= balance_of(account)
 
-# dynamic balance
+    # dynamic balance
 
-# inflow
-let (len_in:felt)= stream_in_len_by_addr.read(account)
+    # inflow
+    let (len_in:felt)= stream_in_len_by_addr.read(account)
 
-let (inflow_sum: felt) = getInflowSum(len_in,stream_in_info_by_addr.read(account))
-
-
-
-# outflow
-let (len_out:felt)= stream_out_len_by_addr.read(account_
-let (outflow_sum:felt_ = getOutflowSum(len_out, stream_out_info_by_addr.read(account))
+    let (inflow_sum: Uint256) = getInflowSum(len_in,stream_in_info_by_addr.read(account))
 
 
-return totalBalance = static_balance + inflow_sum - outflow_sum
+
+    # outflow
+    let (len_out:felt)= stream_out_len_by_addr.read(account)
+    let (outflow_sum:Uint256) = getOutflowSum(len_out, stream_out_info_by_addr.read(account))
+
+
+    return totalBalance = static_balance + inflow_sum - outflow_sum
+end
 
 # TODO: modify logic
-func getInflowSum(n:felt,arr: inflow*)->(res: felt):
+@view
+func getInflowSum{
+        syscall_ptr : felt*,
+        pedersen_ptr : HashBuiltin*,
+        range_check_ptr
+    }(n:felt,arr: inflow*)->(res: Uint256):
     if n==1:
         let (block_timestamp_ = get_block_timestamp()
-        let result= (arr[n-1].amount_per_unit*block_timestamp)/(arr[n-1].createdTimestamp)
+        let result= (arr[n-1].amount_per_unit*(block_timestamp-arr[n-1].createdTimestamp))/86400
         return result
+    end
     return getInflowSum(n-1,arr[n])
-
+    
+end
 # TODO: modify logic
-func getOutflowSum(n:felt,arr: outflow*)->(res: felt):
+@view
+func getOutflowSum{
+        syscall_ptr : felt*,
+        pedersen_ptr : HashBuiltin*,
+        range_check_ptr
+    }(n:felt,arr: outflow*)->(res: Uint256):
     if n==1:
         let (block_timestamp_ = get_block_timestamp()
-        let result= (arr[n-1].amount_per_unit*block_timestamp)/(arr[n-1].createdTimestamp)
+        let result= (arr[n-1].amount_per_unit*(block_timestamp-arr[n-1].createdTimestamp))/86400
         return result
+    end
     return getOutflowSum(n-1,arr[n])
-
-
+end
 
 ######################################################################
 # called by core contract when a new stream is created 
 # update sender's outflow and receiver's inflow
-func Stream_created(sender,receiver,amount,createdTimestamp)->:
+@external
+func Stream_created{
+        syscall_ptr : felt*,
+        pedersen_ptr : HashBuiltin*,
+        range_check_ptr
+    }(sender:felt,receiver:felt,amount:Uint256,createdTimestamp:felt)->(bool:felt):
     # get and update receiver inflow info 
     let (len_in:felt) = stream_in_len_by_addr.read(receiver)
 
-    assert stream_in_info_by_address.read(receiver)[len_in]= 
-    inflow(index= len_in,amount_per_unit= amount,createdTimestamp=c reatedTimestamp)
+    stream_in_info_by_address.write(receiver,inflow[len_in]=inflow(index= len_in,amount_per_unit= amount,createdTimestamp=createdTimestamp))
     
-    assert stream_in_len_by_addr.read(receiver) = len_in+1
+    
+    stream_in_len_by_addr.write(receiver,len_in+1) 
 
     # get and update sender outlow info 
     let len_out=stream_out_len_by_addr(sender)
-    assert stream_out_info_by_addr.read(sender)[len_out]= 
-        outflow(index=len_out,amount_per_unit= amount,createdTimestamp=createdTimestamp)
+    stream_out_info_by_addr.write(sender,outflow[len_out]=outflow(index=len_out,amount_per_unit= amount,createdTimestamp=createdTimestamp))
+        
 
-    assert stream_out_len_by_addr.read(sender) = len_out+1
+    stream_out_len_by_addr.write(sender,len_out+1)
 
     return true
+end
+
 #####################################################################
 # called by core contract when a new stream is stopped 
 # update sender's outflow and receiver's inflow
-func Stream_stopped(sender,receiver,amount,createdTimestamp)->bool:
+@external
+func Stream_stopped{
+        syscall_ptr : felt*,
+        pedersen_ptr : HashBuiltin*,
+        range_check_ptr
+    }(sender:felt,receiver:felt,amount:Uint256,createdTimestamp:felt)->(bool:felt):
     # get and update receiver inflow info 
     stream_in_length_by_address: receiver->total len of inflow array
     let (len_in:felt)= stream_in_len_by_addr.read(receiver)
     # TODO: change the for loop
-    for index = range(len_in):
-        # a dumb way
-        if(stream_in_info_by_addr(receiver)[index].amount_per_unit == amount
-        && stream_in_info_by_addr(receiver)[index].createdTimestamp == createdTimestamp)
-        let stream_in_info_by_addr(receiver)[index].amount_per_unit = 0
+    # for index = range(len_in):
+    #     # a dumb way
+    #     if(stream_in_info_by_addr(receiver)[index].amount_per_unit == amount
+    #     && stream_in_info_by_addr(receiver)[index].createdTimestamp == createdTimestamp)
+    #     let stream_in_info_by_addr(receiver)[index].amount_per_unit = 0
 
     # get and update sender outlow info 
     let (len_out:felt)=stream_out_len_by_addr.read(sender)
-    for index = range(len_out):
-        # a dumb way
-        if(stream_out_info_by_address(sender)[index].amount_per_unit == amount
-        && stream_out_info_by_address(sender)[index].createdTimestamp == createdTimestamp)
-        let stream_out_info_by_address(sender)[index].amount_per_unit== 0
+    # for index = range(len_out):
+    #     # a dumb way
+    #     if(stream_out_info_by_address(sender)[index].amount_per_unit == amount
+    #     && stream_out_info_by_address(sender)[index].createdTimestamp == createdTimestamp)
+    #     let stream_out_info_by_address(sender)[index].amount_per_unit== 0
+    return true
+end
 ####################################################################################
 
-TODO: consider negative part
+#TODO: consider negative part
