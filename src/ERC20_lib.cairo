@@ -313,7 +313,7 @@ namespace ERC20:
     end
 
     func _overwrite_balance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        owner: felt, amount: Uint256
+        owner : felt, amount : Uint256
     ):
         ERC20_balances.write(owner, amount)
         return ()

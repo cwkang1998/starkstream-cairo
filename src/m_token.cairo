@@ -416,9 +416,9 @@ func update_outflow_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     alloc_locals
     let (caller) = get_caller_address()
     let (timestamp_now) = get_block_timestamp()
-    
-    let (outflow_stream) = stream_out_info_by_addr.read(caller, outflow_id) 
-    local outflow_stream: outflow = outflow_stream
+
+    let (outflow_stream) = stream_out_info_by_addr.read(caller, outflow_id)
+    local outflow_stream : outflow = outflow_stream
 
     # update static balance of recipient
 
@@ -444,12 +444,10 @@ func update_outflow_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     return ()
 end
 
-
-
-#### TODO
-#- stop_stream
-#- unwrap
-#- transfer
+# ### TODO
+# - stop_stream
+# - unwrap
+# - transfer
 
 # output structs
 # struct StreamReadInfo
@@ -465,9 +463,6 @@ end
 # - get_all_inflow_streams_by_user(user:felt)
 # - get_total_outflow_by_user(user:felt)
 # - get_total_inflow_by_user(user:felt)
-
-
-
 
 # @external
 # func stop_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
