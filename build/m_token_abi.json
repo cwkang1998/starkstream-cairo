@@ -326,5 +326,20 @@
         "name": "start_stream",
         "outputs": [],
         "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "outflow_id",
+                "type": "felt"
+            },
+            {
+                "name": "amount_per_second",
+                "type": "Uint256"
+            }
+        ],
+        "name": "update_outflow_stream",
+        "outputs": [],
+        "type": "function"
     }
 ]
