@@ -65,6 +65,7 @@ func decimals{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     return (decimals)
 end
 
+# need to change logic
 @view
 func balance_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     account : felt
@@ -86,6 +87,7 @@ end
 # Externals
 #
 
+# need to update logic
 @external
 func transfer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     recipient : felt, amount : Uint256
@@ -94,6 +96,7 @@ func transfer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     return (1)
 end
 
+# need to update logic
 @external
 func transfer_from{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     sender : felt, recipient : felt, amount : Uint256
@@ -166,6 +169,7 @@ func unwrap{
         let (m_token_contract) = get_contract_address()
         let (caller) = get_caller_address()
         
+        # can just use transfer since sender is this contract 
         let (transfer_res) = IERC20.transferFrom(
             contract_address=token_addr,
             sender=m_token_contract,
