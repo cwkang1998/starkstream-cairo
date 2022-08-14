@@ -166,9 +166,9 @@ func mint{
         syscall_ptr: felt*,
         pedersen_ptr: HashBuiltin*,
         range_check_ptr
-    }(to: felt, amount: Uint256):
+    }(recipient: felt, amount: Uint256):
     Ownable.assert_only_owner()
-    ERC20._mint(to, amount)
+    ERC20._mint(recipient, amount)
     return ()
 end
 
@@ -177,9 +177,9 @@ func burn{
         syscall_ptr: felt*,
         pedersen_ptr: HashBuiltin*,
         range_check_ptr
-    }(to: felt, amount: Uint256):
+    }(account: felt, amount: Uint256):
     Ownable.assert_only_owner()
-    ERC20._burn(to, amount)
+    ERC20._burn(account, amount)
     return ()
 end
 

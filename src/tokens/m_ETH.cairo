@@ -8,7 +8,7 @@ from openzeppelin.access.ownable.library import Ownable
 from openzeppelin.token.erc20.IERC20 import IERC20
 from openzeppelin.token.erc20.library import ERC20
 
-from src.interfaces.ISuperToken import ISuperToken
+from src.tokens.SuperToken import supertoken_mint, supertoken_burn
 
 #
 # Events
@@ -20,10 +20,6 @@ end
 @event
 func Burn(token_addr : felt, value : Uint256):
 end
-
-#
-# external functions
-#
 
 # check if user has sufficient tokens in wallet
 func assert_sufficient_tokens{
@@ -51,7 +47,7 @@ end
 # function callable by users
 @external
 func upgrade_by_eth{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    token_address : felt, amount : Uint256
+    token_address : felt, supertoken_address: felt, amount : Uint256, 
 ):
     # get caller address and balance
     alloc_locals
@@ -60,9 +56,9 @@ func upgrade_by_eth{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     # check for sufficient token balance
     assert_sufficient_tokens(token_address, amount)
     # burn underlying token
-    # ERC20._burn(amount)
-    # mint SuperToken
-    # ISuperToken.mint(token_address, amount)
+    #ERC20._burn(amount)
+    # mint SuperToken to caller_address
+    supertoken_mint(supertoken_address, caller_addr, amount)
     Mint.emit(token_address, amount)
 
     return ()
@@ -71,17 +67,19 @@ end
 # function callable by users
 @external
 func downgrade_to_eth{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    token_address : felt, amount : Uint256
+    token_address : felt, supertoken_address: felt, amount : Uint256
 ):
     # check for sufficient token balance in SuperToken contract ?
     # get caller address and balance
     alloc_locals
     let (caller_addr) = get_caller_address()
     local caller_addr = caller_addr
-    # burn SuperToken
-    # ISuperToken.burn(token_address, amount)
+    # burn SuperToken from SuperToken address
+    supertoken_burn(supertoken_address, supertoken_address, amount)
     Burn.emit(token_address, amount)
     # mint underlying token
-    # ERC20._mint(caller_addr, amount)
+    #ERC20._mint(caller_addr, amount)
     return ()
 end
+
+

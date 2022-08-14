@@ -21,8 +21,8 @@ namespace ISuperToken:
     func owner() -> (res: felt):
     end
     ## external
-    func mint(to: felt, amount: Uint256) -> (res: felt):
+    func mint(recipient: felt, amount: Uint256) -> (res: felt):
     end   
-    func burn(to: felt, amount: Uint256) -> (res: felt):
+    func burn(account: felt, amount: Uint256) -> (res: felt):
     end   
 end

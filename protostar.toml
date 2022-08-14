@@ -18,6 +18,9 @@ main = [
 ERC20MintableBurnable = [
     "src/tokens/ERC20MintableBurnable.cairo",
 ]
+SuperToken = [
+    "src/tokens/SuperToken.cairo",
+]
 m_ETH = [
     "src/tokens/m_ETH.cairo",
 ]
