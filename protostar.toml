@@ -4,6 +4,8 @@ protostar_version = "0.3.0"
 ["protostar.project"]
 libs_path = "lib"
 
+["protostar.test"]
+disable-hint-validation = true
 
 ["protostar.shared_command_configs"]
 cairo_path = [
@@ -21,6 +23,6 @@ ERC20MintableBurnable = [
 SuperToken = [
     "src/tokens/SuperToken.cairo",
 ]
-m_ETH = [
-    "src/tokens/m_ETH.cairo",
+core = [
+    "src/tokens/core.cairo",
 ]

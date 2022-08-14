@@ -55,9 +55,9 @@ func upgrade_by_eth{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     local caller_addr = caller_addr
     # check for sufficient token balance
     assert_sufficient_tokens(token_address, amount)
-    # burn underlying token
-    #ERC20._burn(amount)
-    # mint SuperToken to caller_address
+    # deposit X amount into core(vault) contract
+
+    # mint mToken to caller_address
     supertoken_mint(supertoken_address, caller_addr, amount)
     Mint.emit(token_address, amount)
 
@@ -77,9 +77,10 @@ func downgrade_to_eth{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
     # burn SuperToken from SuperToken address
     supertoken_burn(supertoken_address, supertoken_address, amount)
     Burn.emit(token_address, amount)
-    # mint underlying token
-    #ERC20._mint(caller_addr, amount)
+    # withdraw X amount into core(vault) contract
+
     return ()
 end
+
 
 
