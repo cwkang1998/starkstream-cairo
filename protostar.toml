@@ -14,15 +14,9 @@ cairo_path = [
 
 
 ["protostar.contracts"]
-main = [
-    "src/main.cairo",
-]
-ERC20MintableBurnable = [
-    "src/tokens/ERC20MintableBurnable.cairo",
-]
 m_token = [
     "src/m_token.cairo",
 ]
 core = [
-    "src/tokens/core.cairo",
+    "src/core.cairo",
 ]

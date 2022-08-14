@@ -25,7 +25,7 @@ end
 # storage
 #
 @storage_var
-func token_registrar() -> (res: felt):
+func token_registrar() -> (res : felt):
 end
 
 # @constructor
@@ -35,19 +35,17 @@ end
 #     range_check_ptr,
 # }(token_registrar_: felt, erc20_addr_: felt, admin: felt):
 
-#     Ownable.initializer(admin)
+# Ownable.initializer(admin)
 #     token_registrar.write(token_registrar_)
 
-#     return ()
+# return ()
 # end
 
 # init stuff
 @view
-func get_admin{
-    syscall_ptr : felt*,
-    pedersen_ptr : HashBuiltin*,
-    range_check_ptr,
-}() -> (admin: felt):
+func get_admin{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
+    admin : felt
+):
     let (res) = Ownable.owner()
     return (admin=res)
 end
@@ -62,7 +60,6 @@ end
 #     return (res=res)
 # end
 
-
 #
 # asserts
 #
@@ -73,21 +70,19 @@ end
 # }(token_address: felt):
 #     let (token_registrar_addr) = token_registrar.read()
 
-#     let (is_registered) = IUserRegistrar.check_user_registered(contract_address=token_registrar_addr,
+# let (is_registered) = IUserRegistrar.check_user_registered(contract_address=token_registrar_addr,
 #                                                                sender_address=user)
 #     with_attr error_message("User not registered"):
 #         assert is_registered = 1
 #     end
 
-#     return ()
+# return ()
 # end
 
 # check if user has sufficient tokens in wallet
-func assert_sufficient_tokens{
-    syscall_ptr : felt*, 
-    pedersen_ptr : HashBuiltin*, 
-    range_check_ptr
-    }(token_address: felt, amount: Uint256):
+func assert_sufficient_tokens{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    token_address : felt, amount : Uint256
+):
     alloc_locals
     # check for non-zero amount
     with_attr error_message("Token amount is less than 0"):
@@ -108,7 +103,7 @@ end
 # function callable by users
 @external
 func upgrade_by_eth{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    token_address : felt, supertoken_address: felt, amount : Uint256, 
+    token_address : felt, supertoken_address : felt, amount : Uint256
 ):
     # get caller address and balance
     alloc_locals
@@ -128,7 +123,7 @@ end
 # function callable by users
 @external
 func downgrade_to_eth{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    token_address : felt, supertoken_address: felt, amount : Uint256
+    token_address : felt, supertoken_address : felt, amount : Uint256
 ):
     # check for sufficient token balance in SuperToken contract ?
     # get caller address and balance
@@ -142,6 +137,3 @@ func downgrade_to_eth{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 
     return ()
 end
-
-
-
