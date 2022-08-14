@@ -25,7 +25,7 @@ end
 # 
 @constructor
 func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr} (
-    name: felt, symbol: felt,  token_addr: felt
+    name: felt, symbol: felt, owner: felt,  token_addr: felt
 ):
     ERC20.initializer(name, symbol, 18)
     Ownable.initializer(owner)
@@ -140,7 +140,7 @@ func wrap{
         let (token_addr) = underlying_token_addr.read()
         let (caller) = get_caller_address()
         
-        let (transfer_res) = IERC20.transfer_from(
+        let (transfer_res) = IERC20.transferFrom(
             contract_address=token_addr,
             sender=caller,
             recipient=to,
@@ -159,15 +159,15 @@ func unwrap{
         syscall_ptr : felt*,
         pedersen_ptr : HashBuiltin*,
         range_check_ptr
-    }(amount: Uint256):
+    }(account: felt, amount: Uint256):
         ERC20._burn(account, amount)
         
         let (token_addr) = underlying_token_addr.read()
         let (m_token_contract) = get_contract_address()
         let (caller) = get_caller_address()
         
-        let (transfer_res) = IERC20.transfer_from(
-            contract_address=contract_address,
+        let (transfer_res) = IERC20.transferFrom(
+            contract_address=token_addr,
             sender=m_token_contract,
             recipient=caller,
             amount=amount
