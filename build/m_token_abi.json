@@ -17,6 +17,90 @@
         "type": "struct"
     },
     {
+        "members": [
+            {
+                "name": "index",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "amount_per_second",
+                "offset": 1,
+                "type": "Uint256"
+            },
+            {
+                "name": "created_timestamp",
+                "offset": 3,
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "offset": 4,
+                "type": "felt"
+            },
+            {
+                "name": "from_sender",
+                "offset": 5,
+                "type": "felt"
+            },
+            {
+                "name": "inflow_index",
+                "offset": 6,
+                "type": "felt"
+            },
+            {
+                "name": "deposit",
+                "offset": 7,
+                "type": "Uint256"
+            }
+        ],
+        "name": "outflow",
+        "size": 9,
+        "type": "struct"
+    },
+    {
+        "members": [
+            {
+                "name": "index",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "amount_per_second",
+                "offset": 1,
+                "type": "Uint256"
+            },
+            {
+                "name": "created_timestamp",
+                "offset": 3,
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "offset": 4,
+                "type": "felt"
+            },
+            {
+                "name": "from_sender",
+                "offset": 5,
+                "type": "felt"
+            },
+            {
+                "name": "outflow_index",
+                "offset": 6,
+                "type": "felt"
+            },
+            {
+                "name": "deposit",
+                "offset": 7,
+                "type": "Uint256"
+            }
+        ],
+        "name": "inflow",
+        "size": 9,
+        "type": "struct"
+    },
+    {
         "data": [
             {
                 "name": "from_",
@@ -94,6 +178,30 @@
     },
     {
         "inputs": [],
+        "name": "get_underlying_token_addr",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "get_owner",
+        "outputs": [
+            {
+                "name": "owner",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "name",
         "outputs": [
             {
@@ -121,7 +229,7 @@
         "name": "total_supply",
         "outputs": [
             {
-                "name": "totalSupply",
+                "name": "total_supply",
                 "type": "Uint256"
             }
         ],
@@ -160,71 +268,6 @@
     {
         "inputs": [
             {
-                "name": "owner",
-                "type": "felt"
-            },
-            {
-                "name": "spender",
-                "type": "felt"
-            }
-        ],
-        "name": "allowance",
-        "outputs": [
-            {
-                "name": "remaining",
-                "type": "Uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "recipient",
-                "type": "felt"
-            },
-            {
-                "name": "amount",
-                "type": "Uint256"
-            }
-        ],
-        "name": "transfer",
-        "outputs": [
-            {
-                "name": "success",
-                "type": "felt"
-            }
-        ],
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "sender",
-                "type": "felt"
-            },
-            {
-                "name": "recipient",
-                "type": "felt"
-            },
-            {
-                "name": "amount",
-                "type": "Uint256"
-            }
-        ],
-        "name": "transfer_from",
-        "outputs": [
-            {
-                "name": "success",
-                "type": "felt"
-            }
-        ],
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "name": "spender",
                 "type": "felt"
             },
@@ -234,60 +277,11 @@
             }
         ],
         "name": "approve",
-        "outputs": [
-            {
-                "name": "success",
-                "type": "felt"
-            }
-        ],
+        "outputs": [],
         "type": "function"
     },
     {
         "inputs": [
-            {
-                "name": "spender",
-                "type": "felt"
-            },
-            {
-                "name": "added_value",
-                "type": "Uint256"
-            }
-        ],
-        "name": "increase_allowance",
-        "outputs": [
-            {
-                "name": "success",
-                "type": "felt"
-            }
-        ],
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "spender",
-                "type": "felt"
-            },
-            {
-                "name": "subtracted_value",
-                "type": "Uint256"
-            }
-        ],
-        "name": "decreaseAllowance",
-        "outputs": [
-            {
-                "name": "success",
-                "type": "felt"
-            }
-        ],
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "to",
-                "type": "felt"
-            },
             {
                 "name": "amount",
                 "type": "Uint256"
@@ -299,10 +293,6 @@
     },
     {
         "inputs": [
-            {
-                "name": "account",
-                "type": "felt"
-            },
             {
                 "name": "amount",
                 "type": "Uint256"
@@ -321,6 +311,10 @@
             {
                 "name": "amount_per_second",
                 "type": "Uint256"
+            },
+            {
+                "name": "deposit_amount",
+                "type": "Uint256"
             }
         ],
         "name": "start_stream",
@@ -338,8 +332,125 @@
                 "type": "Uint256"
             }
         ],
-        "name": "update_outflow_stream",
+        "name": "update_stream",
         "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "outflow_id",
+                "type": "felt"
+            },
+            {
+                "name": "to_remove_amount",
+                "type": "Uint256"
+            }
+        ],
+        "name": "sender_remove_deposit",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "outflow_id",
+                "type": "felt"
+            },
+            {
+                "name": "to_add_amount",
+                "type": "Uint256"
+            }
+        ],
+        "name": "sender_add_deposit",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "outflow_id",
+                "type": "felt"
+            }
+        ],
+        "name": "cancel_stream",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "recipient",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "name": "transfer",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "sender",
+                "type": "felt"
+            },
+            {
+                "name": "recipient",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "name": "transfer_from",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "user",
+                "type": "felt"
+            }
+        ],
+        "name": "get_all_outflow_streams_by_user",
+        "outputs": [
+            {
+                "name": "res_len",
+                "type": "felt"
+            },
+            {
+                "name": "res",
+                "type": "outflow*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "user",
+                "type": "felt"
+            }
+        ],
+        "name": "get_all_inflow_streams_by_user",
+        "outputs": [
+            {
+                "name": "res_len",
+                "type": "felt"
+            },
+            {
+                "name": "res",
+                "type": "inflow*"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     }
 ]
