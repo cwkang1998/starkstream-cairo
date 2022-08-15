@@ -3,11 +3,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.math import assert_lt
-from starkware.starknet.common.syscalls import (
-    get_block_timestamp,
-    get_caller_address,
-    get_contract_address,
-)
+from starkware.starknet.common.syscalls import get_block_timestamp, get_caller_address, get_contract_address
 from src.structs.m_token_struct import inflow, outflow
 from src.ERC20_lib import ERC20
 from openzeppelin.token.erc20.IERC20 import IERC20
@@ -59,52 +55,53 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 end
 
 @view
-func get_underlying_token_addr{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    ) -> (res : felt):
+func get_underlying_token_addr{
+        syscall_ptr : felt*,
+        pedersen_ptr : HashBuiltin*,
+        range_check_ptr,
+    }() -> (res:felt):
     let (token_addr) = underlying_token_addr.read()
     return (res=token_addr)
 end
 
 @view
-func get_owner{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
-    owner : felt
-):
+func get_owner{
+        syscall_ptr : felt*,
+        pedersen_ptr : HashBuiltin*,
+        range_check_ptr,
+    }() -> (owner:felt):
     let (res) = Ownable.owner()
     return (owner=res)
 end
 
 @view
-func name{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (name : felt):
+func name{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (name:felt):
     let (name) = ERC20.name()
     return (name)
 end
 
 @view
-func symbol{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (symbol : felt):
+func symbol{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (symbol:felt):
     let (symbol) = ERC20.symbol()
     return (symbol)
 end
 
 @view
-func total_supply{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
-    total_supply : Uint256
-):
+func total_supply{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() ->(total_supply : Uint256):
     let (total_supply) = ERC20.total_supply()
     return (total_supply)
 end
 
 @view
-func decimals{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
-    decimals : felt
-):
+func decimals{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (decimals:felt):
     let (decimals) = ERC20.decimals()
     return (decimals)
 end
 
-@view
+@view 
 func balance_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    account : felt
-) -> (balance : Uint256):
+    account: felt
+) -> (balance: Uint256):
     # static balance + dynamic balanc
     alloc_locals
     let (balance : Uint256) = ERC20.balance_of(account)
@@ -123,17 +120,20 @@ func balance_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
 end
 
 @external
-func approve{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    spender : felt, amount : Uint256
-):
+func approve{
+        syscall_ptr : felt*,
+        pedersen_ptr : HashBuiltin*,
+        range_check_ptr
+    }(spender: felt, amount: Uint256):
     ERC20.approve(spender, amount)
     return ()
 end
 
 @view
 func allowance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    owner : felt, spender : felt
-) -> (remaining : Uint256):
+        owner : felt, spender : felt
+    ) -> (remaining : Uint256):
+
     let (res) = ERC20.allowance(owner, spender)
     return (res)
 end
@@ -192,8 +192,10 @@ func get_streamed_in_amount{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ra
     return (res=final_streamed_amount)
 end
 
-@external
-func wrap{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(amount : Uint256):
+@external 
+func wrap{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    amount : Uint256
+):
     let (token_addr) = underlying_token_addr.read()
     let (caller) = get_caller_address()
     let (this_contract) = get_contract_address()
@@ -210,7 +212,9 @@ func wrap{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(amo
 end
 
 @external
-func unwrap{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(amount : Uint256):
+func unwrap{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    amount: Uint256
+):
     alloc_locals
     let (caller) = get_caller_address()
     local caller = caller
@@ -234,7 +238,7 @@ end
 
 @external
 func start_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    recipient : felt, amount_per_second : Uint256, deposit_amount : Uint256
+    recipient : felt, amount_per_second : Uint256, deposit_amount: Uint256
 ):
     alloc_locals
     let (caller) = get_caller_address()
@@ -253,22 +257,10 @@ func start_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     ERC20.transfer_from(caller, this_contract, deposit_amount)
 
     let _inflow = inflow(
-        recipient_len,
-        amount_per_second,
-        timestamp_now,
-        recipient,
-        caller,
-        sender_len,
-        deposit_amount,
+        recipient_len, amount_per_second, timestamp_now, recipient, caller, sender_len, deposit_amount
     )
     let _outflow = outflow(
-        sender_len,
-        amount_per_second,
-        timestamp_now,
-        recipient,
-        caller,
-        recipient_len,
-        deposit_amount,
+        sender_len, amount_per_second, timestamp_now, recipient, caller, recipient_len, deposit_amount
     )
 
     stream_in_info_by_addr.write(recipient, recipient_len, _inflow)
@@ -277,7 +269,7 @@ func start_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     return ()
 end
 
-@external
+@external 
 func update_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     outflow_id : felt, amount_per_second : Uint256
 ):
@@ -309,9 +301,9 @@ func update_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     return ()
 end
 
-func update_static_balance_from_internal{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(recipient : felt):
+func update_static_balance_from_internal{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    recipient: felt
+):
     let (recipient_len) = stream_in_len_by_addr.read(recipient)
     update_static_balance_from_internal_loop(recipient, recipient_len)
 
@@ -322,16 +314,16 @@ func update_static_balance_from_internal{
     return ()
 end
 
-func update_static_balance_from_internal_loop{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(recipient : felt, total_len : felt):
+func update_static_balance_from_internal_loop{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    recipient: felt, total_len: felt
+):
     alloc_locals
     if total_len == 0:
         return ()
     end
 
-    let (inflow_info) = stream_in_info_by_addr.read(recipient, total_len - 1)
-    local inflow_info : inflow = inflow_info
+    let (inflow_info) = stream_in_info_by_addr.read(recipient, total_len-1)
+    local inflow_info: inflow = inflow_info
 
     let (streamed_amount) = get_streamed_in_amount(inflow_info)
     let (this_contract) = get_contract_address()
@@ -340,48 +332,51 @@ func update_static_balance_from_internal_loop{
 
     let (remaining_deposit) = uint256_sub(inflow_info.deposit, streamed_amount)
 
-    let new_inflow_info = inflow(
-        inflow_info.index,
-        inflow_info.amount_per_second,
-        inflow_info.created_timestamp,
-        inflow_info.to,
-        inflow_info.from_sender,
-        inflow_info.outflow_index,
-        remaining_deposit,
-    )
+    let new_inflow_info = inflow(inflow_info.index, 
+                                 inflow_info.amount_per_second, 
+                                 inflow_info.created_timestamp, 
+                                 inflow_info.to, 
+                                 inflow_info.from_sender, 
+                                 inflow_info.outflow_index,
+                                 remaining_deposit)
     let new_outflow_info = outflow(
-        inflow_info.outflow_index,
-        inflow_info.amount_per_second,
-        inflow_info.created_timestamp,
+                            inflow_info.outflow_index,
+                            inflow_info.amount_per_second, 
+                            inflow_info.created_timestamp, 
+                            inflow_info.to, 
+                            inflow_info.from_sender, 
+                            inflow_info.index,
+                            remaining_deposit)
+
+    stream_in_info_by_addr.write(
         inflow_info.to,
-        inflow_info.from_sender,
         inflow_info.index,
-        remaining_deposit,
+        new_inflow_info,
     )
-
-    stream_in_info_by_addr.write(inflow_info.to, inflow_info.index, new_inflow_info)
     stream_out_info_by_addr.write(
-        inflow_info.from_sender, inflow_info.outflow_index, new_outflow_info
+        inflow_info.from_sender,
+        inflow_info.outflow_index,
+        new_outflow_info,
     )
 
-    update_static_balance_from_internal_loop(recipient, total_len - 1)
+    update_static_balance_from_internal_loop(recipient, total_len-1)
     return ()
 end
 
 @external
 func sender_remove_deposit{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    outflow_id : felt, to_remove_amount : Uint256
+    outflow_id: felt, to_remove_amount: Uint256
 ):
     alloc_locals
     let (caller) = get_caller_address()
     local caller = caller
 
     assert_valid_out_stream(caller, outflow_id)
-
+    
     let (outflow_info) = stream_out_info_by_addr.read(caller, outflow_id)
 
     update_static_balance_from_internal(outflow_info.to)
-
+    
     # fetch again after update
     let (outflow_info) = stream_out_info_by_addr.read(caller, outflow_id)
     let (is_enough_deposit_to_remove) = uint256_le(to_remove_amount, outflow_info.deposit)
@@ -391,24 +386,15 @@ func sender_remove_deposit{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     ERC20._transfer(this_contract, caller, to_remove_amount)
     let (new_deposit) = uint256_sub(outflow_info.deposit, to_remove_amount)
 
-    let new_inflow = inflow(
-        outflow_info.inflow_index,
-        outflow_info.amount_per_second,
-        outflow_info.created_timestamp,
-        outflow_info.to,
-        outflow_info.from_sender,
-        outflow_info.index,
-        new_deposit,
-    )
-    let new_outflow = outflow(
-        outflow_info.index,
-        outflow_info.amount_per_second,
-        outflow_info.created_timestamp,
-        outflow_info.to,
-        outflow_info.from_sender,
-        outflow_info.inflow_index,
-        new_deposit,
-    )
+
+    let new_inflow = inflow(outflow_info.inflow_index, outflow_info.amount_per_second, 
+                            outflow_info.created_timestamp, outflow_info.to, 
+                            outflow_info.from_sender, outflow_info.index, 
+                            new_deposit)
+    let new_outflow = outflow(outflow_info.index, outflow_info.amount_per_second, 
+                            outflow_info.created_timestamp, outflow_info.to, 
+                            outflow_info.from_sender, outflow_info.inflow_index, 
+                            new_deposit)
 
     stream_out_info_by_addr.write(caller, outflow_id, new_outflow)
     stream_in_info_by_addr.write(outflow_info.to, outflow_info.inflow_index, new_inflow)
@@ -418,14 +404,14 @@ end
 
 @external
 func sender_add_deposit{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    outflow_id : felt, to_add_amount : Uint256
+    outflow_id: felt, to_add_amount: Uint256
 ):
     alloc_locals
     let (caller) = get_caller_address()
     local caller = caller
 
     assert_valid_out_stream(caller, outflow_id)
-
+    
     let (outflow_info) = stream_out_info_by_addr.read(caller, outflow_id)
 
     let (this_contract) = get_contract_address()
@@ -433,24 +419,15 @@ func sender_add_deposit{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     let (new_deposit, add_carry) = uint256_add(outflow_info.deposit, to_add_amount)
     assert add_carry = 0
 
-    let new_inflow = inflow(
-        outflow_info.inflow_index,
-        outflow_info.amount_per_second,
-        outflow_info.created_timestamp,
-        outflow_info.to,
-        outflow_info.from_sender,
-        outflow_info.index,
-        new_deposit,
-    )
-    let new_outflow = outflow(
-        outflow_info.index,
-        outflow_info.amount_per_second,
-        outflow_info.created_timestamp,
-        outflow_info.to,
-        outflow_info.from_sender,
-        outflow_info.inflow_index,
-        new_deposit,
-    )
+
+    let new_inflow = inflow(outflow_info.inflow_index, outflow_info.amount_per_second, 
+                            outflow_info.created_timestamp, outflow_info.to, 
+                            outflow_info.from_sender, outflow_info.index, 
+                            new_deposit)
+    let new_outflow = outflow(outflow_info.index, outflow_info.amount_per_second, 
+                            outflow_info.created_timestamp, outflow_info.to, 
+                            outflow_info.from_sender, outflow_info.inflow_index, 
+                            new_deposit)
 
     stream_out_info_by_addr.write(caller, outflow_id, new_outflow)
     stream_in_info_by_addr.write(outflow_info.to, outflow_info.inflow_index, new_inflow)
@@ -460,14 +437,14 @@ end
 
 @external
 func cancel_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    outflow_id : felt
+    outflow_id: felt
 ):
     alloc_locals
     let (caller) = get_caller_address()
     local caller = caller
 
     assert_valid_out_stream(caller, outflow_id)
-
+    
     # update recipient static balance
     let (outflow_info) = stream_out_info_by_addr.read(caller, outflow_id)
     update_static_balance_from_internal(outflow_info.to)
@@ -481,67 +458,48 @@ func cancel_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
 
     let (inflow_len) = stream_in_len_by_addr.read(outflow_info.to)
 
-    let (last_outflow) = stream_out_info_by_addr.read(caller, outflow_len - 1)
-    let (last_inflow) = stream_in_info_by_addr.read(outflow_info.to, inflow_len - 1)
+    let (last_outflow) = stream_out_info_by_addr.read(caller, outflow_len-1)
+    let (last_inflow) = stream_in_info_by_addr.read(outflow_info.to, inflow_len-1)
 
     # swap last outflow to the deleted outflow position
     # get inflow associated to last outflow and update the outflow index
-    let (associated_inflow) = stream_in_info_by_addr.read(
-        last_outflow.to, last_outflow.inflow_index
-    )
-    let new_associated_inflow = inflow(
-        associated_inflow.index,
-        associated_inflow.amount_per_second,
-        associated_inflow.created_timestamp,
-        associated_inflow.to,
-        associated_inflow.from_sender,
-        outflow_id,
-        associated_inflow.deposit,
-    )
+    let (associated_inflow) = stream_in_info_by_addr.read(last_outflow.to, last_outflow.inflow_index)
+    let new_associated_inflow = inflow(associated_inflow.index, associated_inflow.amount_per_second, 
+                                            associated_inflow.created_timestamp, associated_inflow.to, 
+                                            associated_inflow.from_sender, outflow_id, 
+                                            associated_inflow.deposit)
 
     stream_in_info_by_addr.write(last_outflow.to, last_outflow.inflow_index, new_associated_inflow)
 
-    stream_out_info_by_addr.write(
-        caller,
-        outflow_id,
-        outflow(outflow_id, last_outflow.amount_per_second, last_outflow.created_timestamp,
-        last_outflow.to, last_outflow.from_sender, last_outflow.inflow_index,
-        last_outflow.deposit),
+    stream_out_info_by_addr.write(caller, outflow_id,
+        outflow(outflow_id, last_outflow.amount_per_second, last_outflow.created_timestamp, 
+        last_outflow.to, last_outflow.from_sender, last_outflow.inflow_index, 
+        last_outflow.deposit)
     )
-    stream_out_len_by_addr.write(caller, outflow_len - 1)
+    stream_out_len_by_addr.write(caller, outflow_len-1)
 
     # swap last input to the deleted inflow position
-    let (associated_outflow) = stream_out_info_by_addr.read(
-        last_inflow.from_sender, last_inflow.outflow_index
-    )
-    let new_associated_outflow = outflow(
-        associated_outflow.index,
-        associated_outflow.amount_per_second,
-        associated_outflow.created_timestamp,
-        associated_outflow.to,
-        associated_outflow.from_sender,
-        outflow_info.inflow_index,
-        associated_outflow.deposit,
-    )
+    let (associated_outflow) = stream_out_info_by_addr.read(last_inflow.from_sender, last_inflow.outflow_index)
+    let new_associated_outflow = outflow(associated_outflow.index, associated_outflow.amount_per_second, 
+    associated_outflow.created_timestamp, associated_outflow.to, 
+    associated_outflow.from_sender, outflow_info.inflow_index, 
+    associated_outflow.deposit)
 
-    stream_out_info_by_addr.write(
-        last_inflow.from_sender, last_inflow.outflow_index, new_associated_outflow
-    )
+    stream_out_info_by_addr.write(last_inflow.from_sender, last_inflow.outflow_index, new_associated_outflow)
 
-    stream_in_info_by_addr.write(
-        outflow_info.to,
-        outflow_info.inflow_index,
+    stream_in_info_by_addr.write(outflow_info.to, outflow_info.inflow_index,
         inflow(outflow_info.inflow_index, last_inflow.amount_per_second, last_inflow.created_timestamp,
         last_inflow.to, last_inflow.from_sender, last_inflow.outflow_index,
-        last_inflow.deposit),
+        last_inflow.deposit)
     )
-    stream_in_len_by_addr.write(outflow_info.to, inflow_len - 1)
+    stream_in_len_by_addr.write(outflow_info.to, inflow_len-1)
 
     return ()
 end
 
+
 func assert_valid_out_stream{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    sender : felt, outflow_id : felt
+    sender:felt, outflow_id: felt
 ):
     let (len) = stream_out_len_by_addr.read(sender)
     assert_lt(outflow_id, len)
@@ -551,7 +509,7 @@ end
 
 @external
 func transfer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    recipient : felt, amount : Uint256
+    recipient: felt, amount: Uint256
 ):
     let (caller) = get_caller_address()
     update_static_balance_from_internal(caller)
@@ -563,29 +521,28 @@ end
 
 @external
 func transfer_from{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    sender : felt, recipient : felt, amount : Uint256
-):
+        sender : felt, recipient : felt, amount : Uint256
+    ): 
+
     update_static_balance_from_internal(sender)
     ERC20.transfer_from(sender, recipient, amount)
     return ()
 end
 
 @view
-func get_all_outflow_streams_by_user{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(user : felt) -> (res_len : felt, res : outflow*):
+func get_all_outflow_streams_by_user{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    user: felt
+) -> (res_len: felt, res: outflow*):
     let (outflow_len) = stream_out_len_by_addr.read(user)
-    let (outflows : outflow*) = alloc()
+    let (outflows: outflow*) = alloc()
     let (res_len, res) = get_all_outflow_streams_by_user_internal(user, outflow_len, 0, 0, outflows)
 
     return (res_len, res)
 end
 
-func get_all_outflow_streams_by_user_internal{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(sender : felt, total_length : felt, current_index : felt, res_len : felt, res : outflow*) -> (
-    res_len : felt, res : outflow*
-):
+func get_all_outflow_streams_by_user_internal{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    sender: felt, total_length: felt, current_index: felt, res_len: felt, res: outflow*
+) -> (res_len: felt, res: outflow*):
     if total_length == 0:
         return (res_len, res)
     end
@@ -593,30 +550,26 @@ func get_all_outflow_streams_by_user_internal{
     let (outflow_info) = stream_out_info_by_addr.read(sender, current_index)
     assert res[current_index] = outflow_info
 
-    let (outflows_len, outflows) = get_all_outflow_streams_by_user_internal(
-        sender, total_length - 1, current_index + 1, res_len + 1, res
-    )
+    let (outflows_len, outflows) = get_all_outflow_streams_by_user_internal(sender, total_length-1, current_index+1, res_len+1, res)
 
     return (outflows_len, outflows)
 end
 
 @view
-func get_all_inflow_streams_by_user{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(user : felt) -> (res_len : felt, res : inflow*):
+func get_all_inflow_streams_by_user{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    user: felt
+) -> (res_len: felt, res: inflow*):
     let (inflow_len) = stream_in_len_by_addr.read(user)
-    let (inflows : inflow*) = alloc()
+    let (inflows: inflow*) = alloc()
 
     let (res_len, res) = get_all_inflow_streams_by_user_internal(user, inflow_len, 0, 0, inflows)
 
     return (res_len, res)
 end
 
-func get_all_inflow_streams_by_user_internal{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}(sender : felt, total_length : felt, current_index : felt, res_len : felt, res : inflow*) -> (
-    res_len : felt, res : inflow*
-):
+func get_all_inflow_streams_by_user_internal{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    sender: felt, total_length: felt, current_index: felt, res_len: felt, res: inflow*
+) -> (res_len: felt, res: inflow*):
     if total_length == 0:
         return (res_len, res)
     end
@@ -624,9 +577,8 @@ func get_all_inflow_streams_by_user_internal{
     let (inflow_info) = stream_in_info_by_addr.read(sender, current_index)
     assert res[current_index] = inflow_info
 
-    let (inflows_len, inflows) = get_all_inflow_streams_by_user_internal(
-        sender, total_length - 1, current_index + 1, res_len + 1, res
-    )
+    let (inflows_len, inflows) = get_all_inflow_streams_by_user_internal(sender, total_length-1, current_index+1, res_len+1, res)
 
     return (inflows_len, inflows)
 end
+
