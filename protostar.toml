@@ -17,6 +17,3 @@ cairo_path = [
 m_token = [
     "src/m_token.cairo",
 ]
-core = [
-    "src/core.cairo",
-]
