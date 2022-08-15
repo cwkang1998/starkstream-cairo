@@ -41,44 +41,6 @@ func __setup__():
 end
 
 @external
-func test_init_constructor_correctly{
-    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
-}():
-    tempvar contract_address
-    tempvar erc20_address
-    tempvar balance
-    %{
-        ids.contract_address = context.contract_address
-        ids.erc20_address = context.erc20_address
-    %}
-    # check if underlying_token of m_token is matching
-    let (underlying_token) = Im_token.get_underlying_token_addr(contract_address=contract_address)
-    %{ print(f"underlying_token:{ids.erc20_address}") %}
-    assert underlying_token = erc20_address
-    return ()
-end
-
-@external
-func test_wallet_balance_minted{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    ):
-    alloc_locals
-    tempvar erc20_address
-    tempvar balance_low
-    %{ ids.erc20_address = context.erc20_address %}
-    let (balance : Uint256) = IERC20.balanceOf(
-        contract_address=erc20_address, account=OWNER_ADDRESS
-    )
-    local balance : Uint256 = balance
-    %{
-        print(f"[Freshly minted]owner's balance.low: {ids.balance.low}")
-        print(f"[Freshly minted]owner's balance.high: {ids.balance.high}")
-    %}
-    let (is_balance_eq) = uint256_eq(Uint256(1000000, 0), balance)
-    assert is_balance_eq = 1
-    return ()
-end
-
-@external
 func test_wrap_token{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
     alloc_locals
     tempvar erc20_address
